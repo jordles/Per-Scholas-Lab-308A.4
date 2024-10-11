@@ -73,7 +73,7 @@ export function start() {
       }
     );
 
-    //Event listener for carousel slide change
+    //Event listener for carousel slide change utilizing bootstrap
     // $("#carouselExampleControls").on("slide.bs.carousel", function () {
     //   const activeItem = document.querySelector(".carousel-item.active img");
     //   const breedName = activeItem.alt; // Assuming alt contains the breed name
