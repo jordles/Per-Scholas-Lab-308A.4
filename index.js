@@ -317,4 +317,4 @@ async function getFavourites() {
  * - Test other breeds as well. Not every breed has the same data available, so
  *   your code should account for this.
  */
-//made a test case for malayan breed
+//made a test case for malayan breed to print an error since its empty

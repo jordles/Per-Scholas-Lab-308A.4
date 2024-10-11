@@ -73,13 +73,13 @@ export function start() {
       }
     );
 
-    // Event listener for carousel slide change
+    //Event listener for carousel slide change
     // $("#carouselExampleControls").on("slide.bs.carousel", function () {
     //   const activeItem = document.querySelector(".carousel-item.active img");
     //   const breedName = activeItem.alt; // Assuming alt contains the breed name
 
     //   // Fetch breed data and update the breed info
-    //   updateBreedInfo(breedName);
+    //   createBreedInfo(breedName);
     // });
   } else {
     $(multipleCardCarousel).addClass("slide");
