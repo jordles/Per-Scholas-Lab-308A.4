@@ -23,18 +23,18 @@ const API_KEY =
  * This function should execute immediately.
  */
 
-(async function initialLoad() {
-  const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
-  console.log(breeds);
-  const breedData = await breeds.json();
-  for (const obj of breedData) {
-    const option = document.createElement("option");
-    option.textContent = obj.name;
-    breedSelect.appendChild(option);
-  }
-  console.log(breedData);
-  selectBreed();
-})();
+// (async function initialLoad() {
+//   const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
+//   console.log(breeds);
+//   const breedData = await breeds.json();
+//   for (const obj of breedData) {
+//     const option = document.createElement("option");
+//     option.textContent = obj.name;
+//     breedSelect.appendChild(option);
+//   }
+//   console.log(breedData);
+//   selectBreed();
+// })();
 
 /**
  * 2. Create an event handler for breedSelect that does the following:
@@ -51,32 +51,32 @@ const API_KEY =
  * - Add a call to this function to the end of your initialLoad function above to create the initial carousel.
  */
 breedSelect.addEventListener("change", selectBreed);
-// const carouselInner = document.querySelector("#carouselInner");
-async function selectBreed() {
-  const breedSelected = breedSelect.value;
-  const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
-  const breedData = await breeds.json();
 
-  Carousel.clear();
+// async function selectBreed() {
+//   const breedSelected = breedSelect.value;
+//   const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
+//   const breedData = await breeds.json();
 
-  const selectedBreed = breedData.find((breed) => breed.name === breedSelected);
+//   Carousel.clear();
 
-  // selectedBreedId = obj.id;
-  const breedInfo = await fetch(
-    `https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=${selectedBreed.id}`
-  );
-  const breedImages = await breedInfo.json();
-  console.log(breedImages);
-  breedImages.forEach((breed) => {
-    Carousel.appendCarousel(
-      Carousel.createCarouselItem(breed.url, selectedBreed.name, breed.id)
-    ); // Append new items to the carousel
-  });
+//   const selectedBreed = breedData.find((breed) => breed.name === breedSelected);
 
-  createBreedInfo(selectedBreed);
-  // Restart the carousel after loading new images
-  Carousel.start();
-}
+//   // selectedBreedId = obj.id;
+//   const breedInfo = await fetch(
+//     `https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=${selectedBreed.id}`
+//   );
+//   const breedImages = await breedInfo.json();
+//   console.log(breedImages);
+//   breedImages.forEach((breed) => {
+//     Carousel.appendCarousel(
+//       Carousel.createCarouselItem(breed.url, selectedBreed.name, breed.id)
+//     ); // Append new items to the carousel
+//   });
+
+//   createBreedInfo(selectedBreed);
+//   // Restart the carousel after loading new images
+//   Carousel.start();
+// }
 
 function createBreedInfo(breed) {
   infoDump.innerHTML = ""; // Clear previous breed info
@@ -106,6 +106,80 @@ function createBreedInfo(breed) {
  *   by setting a default header with your API key so that you do not have to
  *   send it manually with all of your requests! You can also set a default base URL!
  */
+
+(async function initialLoad() {
+  try {
+    // Using axios to get the breed data
+    const breedsResponse = await axios.get(
+      "https://api.thecatapi.com/v1/breeds"
+    );
+    const breedData = breedsResponse.data;
+
+    // Populate breedSelect with the options
+    for (const obj of breedData) {
+      const option = document.createElement("option");
+      option.textContent = obj.name;
+      breedSelect.appendChild(option);
+    }
+
+    console.log(breedData);
+
+    // Call selectBreed to initialize the carousel
+    selectBreed();
+  } catch (error) {
+    console.error("Error fetching breed data:", error);
+  }
+})();
+async function selectBreed() {
+  const breedSelected = breedSelect.value;
+
+  try {
+    // Fetching all breed data using axios
+    const breedsResponse = await axios.get(
+      "https://api.thecatapi.com/v1/breeds",
+      {
+        onDownloadProgress: updateProgress,
+      }
+    );
+    const breedData = breedsResponse.data;
+
+    // Clear the existing carousel
+    Carousel.clear();
+
+    // Find the selected breed based on the name
+    const selectedBreed = breedData.find(
+      (breed) => breed.name === breedSelected
+    );
+
+    // Fetch breed images based on the selected breed's ID
+    const breedImagesResponse = await axios.get(
+      `https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=${selectedBreed.id}`,
+      {
+        onDownloadProgress: updateProgress,
+      }
+    );
+    const breedImages = breedImagesResponse.data;
+
+    // Log breed images
+    console.log(breedImages);
+
+    // Loop through breed images and append each to the carousel
+    breedImages.forEach((breed) => {
+      Carousel.appendCarousel(
+        Carousel.createCarouselItem(breed.url, selectedBreed.name, breed.id)
+      );
+    });
+
+    // Create breed info section
+    createBreedInfo(selectedBreed);
+
+    // Restart the carousel after loading new images
+    Carousel.start();
+  } catch (error) {
+    console.error("Error fetching breed data or images:", error);
+  }
+}
+
 /**
  * 5. Add axios interceptors to log the time between request and response to the console.
  * - Hint: you already have access to code that does this!
@@ -113,6 +187,24 @@ function createBreedInfo(breed) {
  * - As an added challenge, try to do this on your own without referencing the lesson material.
  */
 
+axios.interceptors.request.use((request) => {
+  console.log("Request happening here!");
+  progressBar.style.width = "0%";
+  document.body.style.cursor = "progress";
+  return request;
+});
+
+axios.interceptors.response.use(
+  (response) => {
+    console.log("Successful response!");
+    document.body.style.cursor = "auto";
+    return response;
+  },
+  (error) => {
+    console.log("Unsuccessful response...");
+    throw error;
+  }
+);
 /**
  * 6. Next, we'll create a progress bar to indicate the request is in progress.
  * - The progressBar element has already been created for you.
@@ -128,12 +220,21 @@ function createBreedInfo(breed) {
  *   once or twice per request to this API. This is still a concept worth familiarizing yourself
  *   with for future projects.
  */
-
+function updateProgress(event) {
+  console.log("progress event: ", event);
+  if (event.progress) {
+    const percentCompleted = Math.round((event.loaded * 100) / event.total);
+    progressBar.style.width = `${percentCompleted}%`; // Update progress bar width
+  } else {
+    console.log("Progress is not computable.");
+  }
+}
 /**
  * 7. As a final element of progress indication, add the following to your axios interceptors:
  * - In your request interceptor, set the body element's cursor style to "progress."
  * - In your response interceptor, remove the progress cursor style from the body element.
  */
+
 /**
  * 8. To practice posting data, we'll create a system to "favourite" certain images.
  * - The skeleton of this function has already been created for you.
