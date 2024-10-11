@@ -13,7 +13,7 @@ const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 // Step 0: Store your API key here for reference and easy access.
 const API_KEY =
   "live_WTcre7ZXAfe4km8orUb1BQwhcNCXuD1WV2RhMRdMPH1IsUJ7xPKOqHat5kU8rcWn";
-
+axios.defaults.headers.common["x-api-key"] = API_KEY;
 /**
  * 1. Create an async function "initialLoad" that does the following:
  * - Retrieve a list of breeds from the cat API using fetch().
@@ -132,7 +132,8 @@ function createBreedInfo(breed) {
 })();
 async function selectBreed() {
   const breedSelected = breedSelect.value;
-
+  // Clear the existing carousel
+  Carousel.clear();
   try {
     // Fetching all breed data using axios
     const breedsResponse = await axios.get(
@@ -142,9 +143,7 @@ async function selectBreed() {
       }
     );
     const breedData = breedsResponse.data;
-
-    // Clear the existing carousel
-    Carousel.clear();
+    console.log("breedData", breedData);
 
     // Find the selected breed based on the name
     const selectedBreed = breedData.find(
@@ -163,6 +162,10 @@ async function selectBreed() {
     // Log breed images
     console.log(breedImages);
 
+    //case for malayan breed
+    if (breedImages.length === 0) {
+      console.error(`This breed doesn't have an entry!`, breedSelect);
+    }
     // Loop through breed images and append each to the carousel
     breedImages.forEach((breed) => {
       Carousel.appendCarousel(
@@ -247,7 +250,33 @@ function updateProgress(event) {
  * - You can call this function by clicking on the heart at the top right of any image.
  */
 export async function favourite(imgId) {
-  // your code here
+  try {
+    //get list of favourites
+    const favouritesResponse = await axios.get(
+      `https://api.thecatapi.com/v1/favourites`
+    );
+
+    if (
+      favouritesResponse.data.some((favourite) => favourite.image_id === imgId)
+    ) {
+      const image = favouritesResponse.data.find(
+        (favourite) => favourite.image.id === imgId
+      );
+
+      console.log("Already favorited, deleting...");
+      await axios.delete(`https://api.thecatapi.com/v1/favourites/${image.id}`);
+      console.log(`Deleted ${imgId}`);
+      return;
+    }
+
+    await axios.post(`https://api.thecatapi.com/v1/favourites`, {
+      image_id: imgId,
+    });
+
+    console.log(`Added favorited cat picture ${imgId}`);
+  } catch (err) {
+    console.error(`Error cannot favourite cat...`, err);
+  }
 }
 
 /**
@@ -260,6 +289,27 @@ export async function favourite(imgId) {
  *    repeat yourself in this section.
  */
 
+getFavouritesBtn.removeEventListener("click", getFavourites); // Prevent duplicate listeners
+getFavouritesBtn.addEventListener("click", getFavourites);
+
+async function getFavourites() {
+  const favourites = await axios.get(`https://api.thecatapi.com/v1/favourites`);
+  console.log(favourites.data);
+
+  Carousel.clear();
+  for (const cat of favourites.data) {
+    const getName = await axios.get(
+      `https://api.thecatapi.com/v1/images/${cat.image_id}`
+    );
+    const catName = getName.data.breeds[0].name;
+    console.log(catName);
+    Carousel.appendCarousel(
+      Carousel.createCarouselItem(cat.image.url, catName, cat.id)
+    );
+  }
+
+  // Carousel.start();
+}
 /**
  * 10. Test your site, thoroughly!
  * - What happens when you try to load the Malayan breed?
@@ -267,3 +317,4 @@ export async function favourite(imgId) {
  * - Test other breeds as well. Not every breed has the same data available, so
  *   your code should account for this.
  */
+//made a test case for malayan breed

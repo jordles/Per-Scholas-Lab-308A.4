@@ -11,7 +11,8 @@ export function createCarouselItem(imgSrc, imgAlt, imgId) {
   img.style.objectFit = "cover";
 
   const favBtn = clone.querySelector(".favourite-button");
-  favBtn.addEventListener("click", () => {
+  favBtn.addEventListener("click", (e) => {
+    e.target.classList.add("red");
     favourite(imgId);
   });
 
@@ -71,6 +72,15 @@ export function start() {
         }
       }
     );
+
+    // Event listener for carousel slide change
+    // $("#carouselExampleControls").on("slide.bs.carousel", function () {
+    //   const activeItem = document.querySelector(".carousel-item.active img");
+    //   const breedName = activeItem.alt; // Assuming alt contains the breed name
+
+    //   // Fetch breed data and update the breed info
+    //   updateBreedInfo(breedName);
+    // });
   } else {
     $(multipleCardCarousel).addClass("slide");
   }
